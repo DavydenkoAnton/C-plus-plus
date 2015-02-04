@@ -15,6 +15,9 @@ map<UINT, EventProc*> eventMap;
 
 int vy = 0;
 int vx = 0;
+int mousey = 0;
+int mousex = 0;
+const int mousespeed = 5;
 double t = 0;
 
 LRESULT CALLBACK KeyboardHanldler(HWND hWnd, UINT uMessage, WPARAM wParam, LPARAM lParam) {
@@ -70,16 +73,17 @@ LRESULT CALLBACK MouseMove(HWND hWnd, UINT uMessage, WPARAM wParam, LPARAM lPara
 }
 
 LRESULT CALLBACK MouseUP(HWND hWnd, UINT uMessage, WPARAM wParam, LPARAM lParam) {
-	TCHAR str[50];
-	wsprintf(str, TEXT("X=%d                    Y=%d"), LOWORD(lParam), HIWORD(lParam)); // текущие координаты курсора мыши
-	SetWindowText(hWnd, str);	// строка выводится в заголовок окна
+
+	mousex = LOWORD(lParam);
+	mousey = HIWORD(lParam);
 	return 0;
 }
 
 LRESULT CALLBACK MouseDOWN(HWND hWnd, UINT uMessage, WPARAM wParam, LPARAM lParam) {
-	TCHAR str[50];
-	wsprintf(str, TEXT("X=%d                    Y=%d"), LOWORD(lParam), HIWORD(lParam)); // текущие координаты курсора мыши
-	SetWindowText(hWnd, str);	// строка выводится в заголовок окна
+
+	mousex = LOWORD(lParam);
+	mousey = HIWORD(lParam);
+	
 	return 0;
 }
 
@@ -167,8 +171,8 @@ INT WINAPI _tWinMain(HINSTANCE hInst, HINSTANCE hPrevInst, LPTSTR lpszCmdLine, i
 	eventMap[WM_KEYDOWN] = KeyboardHanldler;
 	eventMap[WM_LBUTTONDBLCLK] = OnDoubleClick;
 	eventMap[WM_MOUSEMOVE] = MouseMove;
-	eventMap[WM_MOUSEMOVE] = MouseUP;
-	eventMap[WM_MOUSEMOVE] = MouseDOWN;
+	eventMap[WM_LBUTTONDOWN] = MouseUP;
+	eventMap[WM_LBUTTONUP] = MouseDOWN;
 	eventMap[WM_DESTROY] = OnExit;
 	eventMap[WM_TIMER] = OnTimer;
 
