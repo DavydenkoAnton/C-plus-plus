@@ -15,10 +15,13 @@ map<UINT, EventProc*> eventMap;
 
 int vy = 0;
 int vx = 0;
-int mousey = 0;
-int mousex = 0;
+int mouseY0 = 0;
+int mouseX0 = 0;
+int mouseY1 = 0;
+int mouseX1 = 0;
 const int mousespeed = 5;
 double t = 0;
+static int buttondown = false;
 
 LRESULT CALLBACK KeyboardHanldler(HWND hWnd, UINT uMessage, WPARAM wParam, LPARAM lParam) {
 	RECT coord;
@@ -27,16 +30,16 @@ LRESULT CALLBACK KeyboardHanldler(HWND hWnd, UINT uMessage, WPARAM wParam, LPARA
 	int height = coord.bottom - coord.top;
 
 	if (wParam == VK_RIGHT){
-		vx += 20;
+		vx += 40;
 	}
 	if (wParam == VK_LEFT){
-		vx -= 20;
+		vx -= 40;
 	}
 	if (wParam == VK_UP){
-		vy -= 20;
+		vy -= 40;
 	}
 	if (wParam == VK_DOWN){
-		vy += 20;
+		vy += 40;
 	}
 	TCHAR str[50];
 	wsprintf(str, TEXT("code=%d"), wParam); // текущие координаты курсора мыши
@@ -55,44 +58,61 @@ LRESULT CALLBACK OnTimer(HWND hWnd, UINT uMessage, WPARAM wParam, LPARAM lParam)
 	int height = r.bottom - r.top;
 	if (wParam == 1){
 		int ax = 0;
+		int ay = 0;
 		if (vx > 0)ax = -1;
 		if (vx < 0)ax = 1;
 		vx += ax;
-		left += vx;
+		r.left += vx;
+
+		if (vy > 0)ay = -1;
+		if (vy < 0)ay = 1;
+		vy += ay;
+		r.top += vy;
 	}
-		MoveWindow(hWnd,left,top, width, height, true);
-	
+	MoveWindow(hWnd, left + vx, top + vy, width, height, true);
+
 	return 0;
 }
 
 LRESULT CALLBACK MouseMove(HWND hWnd, UINT uMessage, WPARAM wParam, LPARAM lParam) {
-	TCHAR str[50];
-	wsprintf(str, TEXT("X=%d                    Y=%d"), LOWORD(lParam), HIWORD(lParam)); // текущие координаты курсора мыши
-	SetWindowText(hWnd, str);	// строка выводится в заголовок окна
+	
+	/*vx = (mouseX1 - mouseX0) / 10;
+	vy = (mouseY1 - mouseY0) / 10;
+	RECT r;
+	GetWindowRect(hWnd, &r);
+	int top = r.top;
+	int left = r.left;
+	int width = r.right - r.left;
+	int height = r.bottom - r.top;
+	MoveWindow(hWnd, left+vx, top+vy, width, height, true);*/
+
 	return 0;
 }
 
 LRESULT CALLBACK MouseUP(HWND hWnd, UINT uMessage, WPARAM wParam, LPARAM lParam) {
+	
+	mouseX1 = LOWORD(lParam);
+	mouseY1 = HIWORD(lParam);
+	vx = (mouseX1 - mouseX0) / 10;
+	vy = (mouseY1 - mouseY0) / 10;
 
-	mousex = LOWORD(lParam);
-	mousey = HIWORD(lParam);
 	return 0;
 }
 
 LRESULT CALLBACK MouseDOWN(HWND hWnd, UINT uMessage, WPARAM wParam, LPARAM lParam) {
-
-	mousex = LOWORD(lParam);
-	mousey = HIWORD(lParam);
 	
+	mouseX0 = LOWORD(lParam);
+	mouseY0 = HIWORD(lParam);
+
 	return 0;
 }
 
 
 LRESULT CALLBACK OnDoubleClick(HWND hWnd, UINT uMessage, WPARAM wParam, LPARAM lParam){
-	MessageBox(0,
+	/*MessageBox(0,
 		TEXT("Двойной щелчок левой кнопкой мыши"),
 		TEXT("WM_LBUTTONDBLCLK"),
-		MB_OK | MB_ICONINFORMATION);
+		MB_OK | MB_ICONINFORMATION);*/
 	return 0;
 
 }
@@ -111,7 +131,7 @@ INT WINAPI _tWinMain(HINSTANCE hInst, HINSTANCE hPrevInst, LPTSTR lpszCmdLine, i
 	HWND hWnd;
 	MSG Msg;
 	WNDCLASSEX wcl;
-	
+
 
 	/* 1. Определение класса окна  */
 
