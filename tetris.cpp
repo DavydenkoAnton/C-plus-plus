@@ -16,43 +16,42 @@ TCHAR szClassWindow[] = TEXT("Tetris"); /* Имя класса окна */
 
 typedef LRESULT CALLBACK EventProc(HWND hWnd, UINT uMessage, WPARAM wParam, LPARAM lParam);
 map<UINT, EventProc*> eventMap;
-
-char field[20][11] = {
-	"**********",
-	"**********",
-	"**********",
-	"**********",
-	"**********",
-	"**********",
-	"**********",
-	"**********",
-	"**********",
-	"**********",
-	"**********",
-	"**********",
-	"**********",
-	"**********",
-	"**********",
-	"**********",
-	"**********",
-	"**********",
-	"**********",
-	"**********" };
+const int height = 21;
+const int width = 12;
+char field[height][width + 1] = {
+	"*          *",
+	"*          *",
+	"*          *",
+	"*          *",
+	"*          *",
+	"*          *",
+	"*          *",
+	"*          *",
+	"*          *",
+	"*          *",
+	"*          *",
+	"*          *",
+	"*          *",
+	"*          *",
+	"*          *",
+	"*          *",
+	"*          *",
+	"*          *",
+	"*          *",
+	"*          *",
+	"************", };
 
 char figure[2][2][5] = {
 	{
-		"****",
-		"    "
+		"    ",
+		"****"
 	}, {
 		" *  ",
 		"*** "
 	}
 };
 
-void figure_down(){
-	int rand_f = rand() % 2;
 
-}
 
 int cell_size = 20;
 
@@ -113,10 +112,10 @@ INT WINAPI _tWinMain(HINSTANCE hInst, HINSTANCE hPrevInst, LPTSTR lpszCmdLine, i
 		/* Заголовок, рамка, позволяющая менять размеры, системное меню,
 		кнопки развёртывания и свёртывания окна  */
 		WS_OVERLAPPEDWINDOW,	// стиль окна
-		CW_USEDEFAULT,	// х-координата левого верхнего угла окна
-		CW_USEDEFAULT,	// y-координата левого верхнего угла окна
-		CW_USEDEFAULT,	// ширина окна
-		CW_USEDEFAULT,	// высота окна
+		700,	// х-координата левого верхнего угла окна
+		250,	// y-координата левого верхнего угла окна
+		300,	// ширина окна
+		500,	// высота окна
 		NULL,			// дескриптор родительского окна
 		NULL,			// дескриптор меню окна
 		hInst,		// идентификатор приложения, создавшего окно
@@ -128,7 +127,7 @@ INT WINAPI _tWinMain(HINSTANCE hInst, HINSTANCE hPrevInst, LPTSTR lpszCmdLine, i
 
 	ShowWindow(hWnd, nCmdShow);
 	UpdateWindow(hWnd);	// перерисовка окна
-	SetTimer(hWnd, 1, 500, NULL);
+	SetTimer(hWnd, 1, 150, NULL);
 	/* 4.5 Регистрируем события */
 
 	eventMap[WM_KEYDOWN] = KeyboardHanldler;
@@ -152,54 +151,94 @@ INT WINAPI _tWinMain(HINSTANCE hInst, HINSTANCE hPrevInst, LPTSTR lpszCmdLine, i
 
 
 int figure_i = 3;
-int figure_j = 0;
-int rand_f = rand() % 2;
+int figure_y = 0;
+int figure_num = 0;
+
+int string_count = 0;
 
 LRESULT CALLBACK WindowProc(HWND hWnd, UINT uMessage, WPARAM wParam, LPARAM lParam)
 {
 	PAINTSTRUCT ps;   // paint data for Begin/EndPaint  
 
-	
-	
-
-
-	switch (uMessage)
-	{
+	switch (uMessage){
 
 	case WM_TIMER:
-		
-			figure_j++;
 
-			InvalidateRgn(hWnd, NULL, TRUE);
-			UpdateWindow(hWnd);
+		figure_y++;
 
-			
-		
-		
+		//МЫ переберем всю фигуру
+		for (int i = 0; i < 4; i++){
+			for (int j = 0; j < 2; j++){
+				if (field[figure_y + j + 1][figure_i + i] == figure[figure_num][j][i] && figure[figure_num][j][i] != ' '){
+					//пройтись по всей фигуре и записать в массив поля
+					for (int q = 0; q < 4; q++){
+						for (int w = 0; w < 2; w++){
+							if (figure[figure_num][w][q] != ' ')
+								field[figure_y + w][figure_i + q] = figure[figure_num][w][q];
+						}
+					}
+					//сбрасываем координату Y фигуры
+					figure_y = 0;
+					figure_i = 3;
+					figure_num = rand() % 2;
+				}
+			}
+		}
 
 
+
+		//записать в массив честные участки фигуры
+		//остановить фигуры и перейти к следующей
+
+
+		InvalidateRgn(hWnd, NULL, TRUE);
+		UpdateWindow(hWnd);
 
 		break;
 	case WM_PAINT:
 
 		BeginPaint(hWnd, &ps);
-		for (int j = 0; j < 20; j++){
-			for (int i = 0; i < 10; i++){
-				if (field[j][i] == '*'){
+		for (int j = 0; j < height; j++){
+			for (int i = 0; i < width; i++){
+				if (field[j][i] == ' '){
 					Rectangle(ps.hdc, x(i), y(j), x(i) + 21, y(j) + 21);
+				}
+				else if (field[j][i] == '*') {
+					SelectObject(ps.hdc, GetStockObject(GRAY_BRUSH));
+					Rectangle(ps.hdc, x(i), y(j), x(i) + 21, y(j) + 21);
+					SelectObject(ps.hdc, GetStockObject(WHITE_BRUSH));
 				}
 			}
 		}
+
+		for (int j = 0; j < height-1; j++){
+			bool ok = true;//допускаем что эта строка полна
+			for (int i = 0; i < width; i++){
+				if (field[j][i] != '*'){
+					ok = false;
+					break;
+				}
+			}
+
+			if (ok){
+				for (int q = j; q >0; q--){
+					for (int i = 0; i < width; i++){
+						field[q][i] = field[q-1][i];
+					}
+				}
+			}
+		}
+
 
 
 		SelectObject(ps.hdc, GetStockObject(GRAY_BRUSH));
 		for (int h = 0; h < 20; h++){
 			for (int j = 0; j < 2; j++){
 				for (int i = 0; i < 4; i++){
-					
-					if (figure[rand_f][j][i] == '*'){
-						
-						Rectangle(ps.hdc, 20 + (i + figure_i) * 20, 20 + (j + figure_j) * 20, 20 + (i + figure_i) * 20 + 21, 20 + (j + figure_j) * 20 + 21);
+
+					if (figure[figure_num][j][i] == '*'){
+
+						Rectangle(ps.hdc, 20 + (i + figure_i) * 20, 20 + (j + figure_y) * 20, 20 + (i + figure_i) * 20 + 21, 20 + (j + figure_y) * 20 + 21);
 					}
 				}
 			}
@@ -207,6 +246,29 @@ LRESULT CALLBACK WindowProc(HWND hWnd, UINT uMessage, WPARAM wParam, LPARAM lPar
 
 		EndPaint(hWnd, &ps);
 		break;
+
+	case WM_KEYDOWN:
+		if (wParam == VK_LEFT){
+			if (figure_i >= 2){
+				figure_i--;
+			}
+		}
+		if (wParam == VK_RIGHT){
+			if (figure_num == 0){
+				if (figure_i <= 6){
+					figure_i++;
+				}
+			}
+			if (figure_num == 1){
+				if (figure_i <= 7){
+					figure_i++;
+				}
+			}
+		}
+
+		break;
+
+
 
 		//---------------------------------------------------------------------
 
