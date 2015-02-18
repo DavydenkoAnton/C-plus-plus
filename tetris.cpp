@@ -4,6 +4,8 @@
 #include <tchar.h>
 #include <vector>
 #include <map>
+#include <thread>         // std::this_thread::sleep_for
+#include <chrono>         // std::chrono::seconds
 
 #define IDM_RECTANGLE  1200
 
@@ -225,7 +227,7 @@ INT WINAPI _tWinMain(HINSTANCE hInst, HINSTANCE hPrevInst, LPTSTR lpszCmdLine, i
 
 	ShowWindow(hWnd, nCmdShow);
 	UpdateWindow(hWnd);	// перерисовка окна
-	SetTimer(hWnd, 1, 300, NULL);
+	SetTimer(hWnd, 1, 700, NULL);
 	/* 4.5 Регистрируем события */
 
 	eventMap[WM_KEYDOWN] = KeyboardHanldler;
@@ -264,12 +266,13 @@ LRESULT CALLBACK WindowProc(HWND hWnd, UINT uMessage, WPARAM wParam, LPARAM lPar
 		figure_y++;
 
 		//МЫ переберем всю фигуру
-		for (int i = 0; i < 4; i++){
-			for (int j = 0; j < 4; j++){
-				if (field[figure_y + j + 1][figure_x + i] == figure[figure_num][j][i] && figure[figure_num][j][i] != ' '){
+		for (int i = 0; i < figure_width; i++){
+			for (int j = 0; j < figure_height; j++){
+				if (field[figure_y + j + 1][figure_x + i] == figure[figure_num][j][i] &&
+					figure[figure_num][j][i] != ' '){
 					//пройтись по всей фигуре и записать в массив поля
-					for (int q = 0; q < 4; q++){
-						for (int w = 0; w < 4; w++){
+					for (int w = 0; w < figure_height; w++){
+						for (int q = 0; q < figure_width; q++){
 							if (figure[figure_num][w][q] != ' ')
 								field[figure_y + w][figure_x + q] = figure[figure_num][w][q];
 						}
@@ -283,7 +286,7 @@ LRESULT CALLBACK WindowProc(HWND hWnd, UINT uMessage, WPARAM wParam, LPARAM lPar
 				}
 			}
 		}
-
+		//KillTimer(hWnd, 1);
 
 
 
@@ -349,6 +352,12 @@ LRESULT CALLBACK WindowProc(HWND hWnd, UINT uMessage, WPARAM wParam, LPARAM lPar
 
 	case WM_KEYDOWN:
 
+		//реакция на движение вниз
+		/*if (wParam == VK_DOWN){
+			figure_y++;
+			std::this_thread::sleep_for(std::chrono::milliseconds (1000));
+			}*/
+
 		//реакция на движение влево
 		if (wParam == VK_LEFT){
 			if (figure_num == 7){
@@ -356,8 +365,8 @@ LRESULT CALLBACK WindowProc(HWND hWnd, UINT uMessage, WPARAM wParam, LPARAM lPar
 					figure_x--;
 				}
 			}
-			if (figure_num == 0  || figure_num == 1  || figure_num == 2  || figure_num == 3  ||
-				figure_num == 4  || figure_num == 5  || figure_num == 6  || figure_num == 9  ||
+			if (figure_num == 0 || figure_num == 1 || figure_num == 2 || figure_num == 3 ||
+				figure_num == 4 || figure_num == 5 || figure_num == 6 || figure_num == 9 ||
 				figure_num == 10 || figure_num == 11 || figure_num == 12 || figure_num == 13 ||
 				figure_num == 14 || figure_num == 15 || figure_num == 16 || figure_num == 17 ||
 				figure_num == 18 || figure_num == 19){
@@ -396,7 +405,7 @@ LRESULT CALLBACK WindowProc(HWND hWnd, UINT uMessage, WPARAM wParam, LPARAM lPar
 
 		//реакция на поворот фигуры
 
-		
+
 		if (wParam == VK_SPACE){
 			//поворот палки
 			if (figure_num == 0){
@@ -431,8 +440,8 @@ LRESULT CALLBACK WindowProc(HWND hWnd, UINT uMessage, WPARAM wParam, LPARAM lPar
 				figure_num = 11;
 				break;
 			}
-			if (figure_num ==11){
-				figure_num =3;
+			if (figure_num == 11){
+				figure_num = 3;
 				break;
 			}
 			//поворот z зеркальной
