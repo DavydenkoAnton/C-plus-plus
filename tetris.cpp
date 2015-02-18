@@ -16,9 +16,12 @@ TCHAR szClassWindow[] = TEXT("Tetris"); /* Имя класса окна */
 
 typedef LRESULT CALLBACK EventProc(HWND hWnd, UINT uMessage, WPARAM wParam, LPARAM lParam);
 map<UINT, EventProc*> eventMap;
-const int height = 21;
+const int field_height = 21;
 const int width = 12;
-char field[height][width + 1] = {
+
+
+
+char field[field_height][width + 1] = {
 	"*          *",
 	"*          *",
 	"*          *",
@@ -41,12 +44,107 @@ char field[height][width + 1] = {
 	"*          *",
 	"************", };
 
-char figure[2][2][5] = {
+const int number_of_figures = 19;
+const int const_figures = 7;
+const int figure_height = 4;
+const int figure_width = 4;
+
+char figure[number_of_figures][figure_height][figure_width + 1] = {
 	{
+		"    ",
+		"    ",// 1
 		"    ",
 		"****"
 	}, {
+		"    ",
+		"    ",// 2
 		" *  ",
+		"*** "
+	}
+	, {
+		"    ",
+		"    ",// 3
+		"**  ",
+		"**  "
+	}, {
+		"    ",
+		"    ",// 4
+		"**  ",
+		" ** "
+	}, {
+		"    ",
+		"    ",// 5
+		" ** ",
+		"**  "
+	}, {
+		"    ",
+		"**  ",// 6
+		" *  ",
+		" *  "
+	}, {
+		"    ",
+		"**  ",// 7
+		"*   ",
+		"*   "
+	}, {
+		"  * ",
+		"  * ",//8
+		"  * ",
+		"  * "
+	}, {
+		"    ",
+		"*   ",//9
+		"**  ",
+		"*   "
+	}, {
+		"    ",
+		"    ",//10
+		"*** ",
+		" *  "
+	}, {
+		"    ",
+		" *  ",//11
+		"**  ",
+		" *  "
+	}, {
+		"    ",
+		" *  ",//12
+		"**  ",
+		"*   "
+	}, {
+		"    ",
+		"*   ",//13
+		"**  ",
+		" *  "
+	}, {
+		"    ",
+		"    ",//14
+		"  * ",
+		"*** "
+	}, {
+		"    ",
+		"*   ",//15
+		"*   ",
+		"**  "
+	}, {
+		"    ",
+		"    ",//16
+		"*** ",
+		"*   "
+	}, {
+		"    ",
+		"    ",//17
+		"*** ",
+		"  * "
+	}, {
+		"    ",
+		" *  ",//18
+		" *  ",
+		"**  "
+	}, {
+		"    ",
+		"    ",//19
+		"*   ",
 		"*** "
 	}
 };
@@ -127,7 +225,7 @@ INT WINAPI _tWinMain(HINSTANCE hInst, HINSTANCE hPrevInst, LPTSTR lpszCmdLine, i
 
 	ShowWindow(hWnd, nCmdShow);
 	UpdateWindow(hWnd);	// перерисовка окна
-	SetTimer(hWnd, 1, 150, NULL);
+	SetTimer(hWnd, 1, 300, NULL);
 	/* 4.5 Регистрируем события */
 
 	eventMap[WM_KEYDOWN] = KeyboardHanldler;
@@ -150,11 +248,10 @@ INT WINAPI _tWinMain(HINSTANCE hInst, HINSTANCE hPrevInst, LPTSTR lpszCmdLine, i
 // параметров сообщения из очереди сообщений данного приложения	
 
 
-int figure_i = 3;
+int figure_x = 3;
 int figure_y = 0;
 int figure_num = 0;
 
-int string_count = 0;
 
 LRESULT CALLBACK WindowProc(HWND hWnd, UINT uMessage, WPARAM wParam, LPARAM lParam)
 {
@@ -168,27 +265,26 @@ LRESULT CALLBACK WindowProc(HWND hWnd, UINT uMessage, WPARAM wParam, LPARAM lPar
 
 		//МЫ переберем всю фигуру
 		for (int i = 0; i < 4; i++){
-			for (int j = 0; j < 2; j++){
-				if (field[figure_y + j + 1][figure_i + i] == figure[figure_num][j][i] && figure[figure_num][j][i] != ' '){
+			for (int j = 0; j < 4; j++){
+				if (field[figure_y + j + 1][figure_x + i] == figure[figure_num][j][i] && figure[figure_num][j][i] != ' '){
 					//пройтись по всей фигуре и записать в массив поля
 					for (int q = 0; q < 4; q++){
-						for (int w = 0; w < 2; w++){
+						for (int w = 0; w < 4; w++){
 							if (figure[figure_num][w][q] != ' ')
-								field[figure_y + w][figure_i + q] = figure[figure_num][w][q];
+								field[figure_y + w][figure_x + q] = figure[figure_num][w][q];
 						}
 					}
 					//сбрасываем координату Y фигуры
 					figure_y = 0;
-					figure_i = 3;
-					figure_num = rand() % 2;
+					//сбрасываем координату X фигуры
+					figure_x = 3;
+					//следующая рандомная фигура
+					figure_num = rand() % const_figures;
 				}
 			}
 		}
 
 
-
-		//записать в массив честные участки фигуры
-		//остановить фигуры и перейти к следующей
 
 
 		InvalidateRgn(hWnd, NULL, TRUE);
@@ -196,9 +292,9 @@ LRESULT CALLBACK WindowProc(HWND hWnd, UINT uMessage, WPARAM wParam, LPARAM lPar
 
 		break;
 	case WM_PAINT:
-
+		//отрисовка поля
 		BeginPaint(hWnd, &ps);
-		for (int j = 0; j < height; j++){
+		for (int j = 0; j < field_height; j++){
 			for (int i = 0; i < width; i++){
 				if (field[j][i] == ' '){
 					Rectangle(ps.hdc, x(i), y(j), x(i) + 21, y(j) + 21);
@@ -211,34 +307,38 @@ LRESULT CALLBACK WindowProc(HWND hWnd, UINT uMessage, WPARAM wParam, LPARAM lPar
 			}
 		}
 
-		for (int j = 0; j < height-1; j++){
-			bool ok = true;//допускаем что эта строка полна
+		//стирание строки
+
+		//проверяем полна ли она
+		for (int j = 0; j < field_height - 1; j++){
+			bool full_string = true;//допускаем что эта строка полна
 			for (int i = 0; i < width; i++){
 				if (field[j][i] != '*'){
-					ok = false;
+					full_string = false;
 					break;
 				}
 			}
-
-			if (ok){
+			//если полна. сдвигаем вниз строки на один
+			if (full_string){
 				for (int q = j; q >0; q--){
 					for (int i = 0; i < width; i++){
-						field[q][i] = field[q-1][i];
+						field[q][i] = field[q - 1][i];
 					}
 				}
 			}
 		}
 
 
-
+		//отрисовка фигуры
 		SelectObject(ps.hdc, GetStockObject(GRAY_BRUSH));
-		for (int h = 0; h < 20; h++){
-			for (int j = 0; j < 2; j++){
-				for (int i = 0; i < 4; i++){
+		for (int h = 0; h < field_height; h++){
+			for (int j = 0; j < figure_height; j++){
+				for (int i = 0; i < figure_width; i++){
 
 					if (figure[figure_num][j][i] == '*'){
 
-						Rectangle(ps.hdc, 20 + (i + figure_i) * 20, 20 + (j + figure_y) * 20, 20 + (i + figure_i) * 20 + 21, 20 + (j + figure_y) * 20 + 21);
+						Rectangle(ps.hdc, 20 + (i + figure_x) * 20, 20 + (j + figure_y) * 20,
+							20 + (i + figure_x) * 20 + 21, 20 + (j + figure_y) * 20 + 21);
 					}
 				}
 			}
@@ -248,25 +348,140 @@ LRESULT CALLBACK WindowProc(HWND hWnd, UINT uMessage, WPARAM wParam, LPARAM lPar
 		break;
 
 	case WM_KEYDOWN:
+
+		//реакция на движение влево
 		if (wParam == VK_LEFT){
-			if (figure_i >= 2){
-				figure_i--;
-			}
-		}
-		if (wParam == VK_RIGHT){
-			if (figure_num == 0){
-				if (figure_i <= 6){
-					figure_i++;
+			if (figure_num == 7){
+				if (figure_x >= 0){
+					figure_x--;
 				}
 			}
-			if (figure_num == 1){
-				if (figure_i <= 7){
-					figure_i++;
+			if (figure_num == 0  || figure_num == 1  || figure_num == 2  || figure_num == 3  ||
+				figure_num == 4  || figure_num == 5  || figure_num == 6  || figure_num == 9  ||
+				figure_num == 10 || figure_num == 11 || figure_num == 12 || figure_num == 13 ||
+				figure_num == 14 || figure_num == 15 || figure_num == 16 || figure_num == 17 ||
+				figure_num == 18 || figure_num == 19){
+				if (figure_x >= 2){
+					figure_x--;
 				}
 			}
 		}
 
-		break;
+		//реакция на движение вправо
+		if (wParam == VK_RIGHT){
+			if (figure_num == 0){
+				if (figure_x <= 6){
+					figure_x++;
+				}
+			}
+			if (figure_num == 7){
+				if (figure_x <= 7){
+					figure_x++;
+				}
+			}
+			if (figure_num == 1 || figure_num == 3 || figure_num == 4 || figure_num == 9 ||
+				figure_num == 13 || figure_num == 15 || figure_num == 16 || figure_num == 18){
+				if (figure_x <= 7){
+					figure_x++;
+				}
+			}
+			if (figure_num == 2 || figure_num == 5 || figure_num == 6 || figure_num == 8 ||
+				figure_num == 10 || figure_num == 11 || figure_num == 12 || figure_num == 14 ||
+				figure_num == 17){
+				if (figure_x <= 8){
+					figure_x++;
+				}
+			}
+		}
+
+		//реакция на поворот фигуры
+
+		
+		if (wParam == VK_SPACE){
+			//поворот палки
+			if (figure_num == 0){
+				figure_num = 7;
+				break;
+			}
+			if (figure_num == 7){
+				figure_num = 0;
+				break;
+			}
+			//поворот короны
+			if (figure_num == 1){
+				figure_num = 8;
+				break;
+			}
+			if (figure_num == 8){
+				figure_num = 9;
+				break;
+			}
+			if (figure_num == 9){
+				figure_num = 10;
+				break;
+			}
+			if (figure_num == 10){
+				figure_num = 1;
+				break;
+			}
+			//поворот кубика
+			//  LOL
+			//поворот z
+			if (figure_num == 3){
+				figure_num = 11;
+				break;
+			}
+			if (figure_num ==11){
+				figure_num =3;
+				break;
+			}
+			//поворот z зеркальной
+			if (figure_num == 4){
+				figure_num = 12;
+				break;
+			}
+			if (figure_num == 12){
+				figure_num = 4;
+				break;
+			}
+			//поворот Г зеркальной
+			if (figure_num == 5){
+				figure_num = 13;
+				break;
+			}
+			if (figure_num == 13){
+				figure_num = 14;
+				break;
+			}
+			if (figure_num == 14){
+				figure_num = 15;
+				break;
+			}
+			if (figure_num == 15){
+				figure_num = 5;
+				break;
+			}
+			//поворот Г 
+			if (figure_num == 6){
+				figure_num = 16;
+				break;
+			}
+			if (figure_num == 16){
+				figure_num = 17;
+				break;
+			}
+			if (figure_num == 17){
+				figure_num = 18;
+				break;
+			}
+			if (figure_num == 18){
+				figure_num = 6;
+				break;
+			}
+
+
+
+		}break;
 
 
 
